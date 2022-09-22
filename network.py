@@ -1,10 +1,30 @@
 import torch
 import numpy as np
+import torch.nn as nn
+import config
 
 
 class Network(torch.nn.Module):
 
-    def encoder(x, scope="spade_encoder"):
+    def __init__(self) -> None:
+        super().__init__()
+
+        num_channels = 16
+        num_conv_blocks = 6
+
+
+        layers = []
+        for i in range(num_conv_blocks):
+            b1 = nn.Conv2d(num_channels, 3, 1, 1)
+            b2 = torch.instance_norm()
+            b3 = nn.LeakyReLU()
+            layers.extend([b1, b2, b3])
+
+        layers.append(nn.Linear(config.DIM_OF_STYLE_EMBEDDING, config.DIM_OF_STYLE_EMBEDDING))
+        
+        self.layers = nn.Sequential(*layers)
+
+    def encoder(self, x, scope="spade_encoder"):
         """Encoder that outputs global N(mu, sig) parameters.
 
         Args:
@@ -21,17 +41,7 @@ class Network(torch.nn.Module):
         # TODO rewrite
         
         x = 2 * x - 1
-        num_channels = 16
         
-        x = torch.nn.Conv2d(4, num_channels, 3, 1, 1)(x)
-        x = torch.instance_norm(x)
-        x = torch.nn.ReLU()(x)
+        x = self.layers(x)
 
-        x = torch.nn.Conv2d(4, num_channels, 3, 1, 1)(x)
-        x = torch.instance_norm(x)
-        x = torch.nn.ReLU()(x)
-
-
-        x = torch.nn.Conv2d(4, num_channels, 3, 1, 1)(x)
-        x = torch.instance_norm(x)
-        x = torch.nn.ReLU()(x)
+        return x
