@@ -38,14 +38,14 @@ def create_vertices_intrinsics(disparity, intrinsics):
   i = i[np.newaxis]
   j = j[np.newaxis]
 
-  depths = 1.0 / tf.clip_by_value(disparity, 0.01, 1.0)
+  depths = 1.0 / torch.clip(disparity, 0.01, 1.0)
   mx = depths / fx
   my = depths / fy
   px = (i-cx) * mx
   py = (j-cy) * my
 
-  vertices = tf.stack([px, py, depths], axis=-1)
-  vertices = tf.reshape(vertices, (batch_size, vertex_count, 3))
+  vertices = torch.stack([px, py, depths], axis=-1)
+  vertices = torch.reshape(vertices, (batch_size, vertex_count, 3))
   return vertices
 
 
@@ -88,13 +88,13 @@ def perspective_from_intrinsics(intrinsics):
     A [B, 4, 4] float32 Tensor that maps from right-handed camera space
     to left-handed clip space.
   """
-  intrinsics = tf.convert_to_tensor(intrinsics)
+  intrinsics = torch.tensor(intrinsics)
   focal_x = intrinsics[:, 0]
   focal_y = intrinsics[:, 1]
   principal_x = intrinsics[:, 2]
   principal_y = intrinsics[:, 3]
-  zero = tf.zeros_like(focal_x)
-  one = tf.ones_like(focal_x)
+  zero = np.zeros_like(focal_x)
+  one = np.ones_like(focal_x)
   near_z = 0.00001 * one
   far_z = 10000.0 * one
 
@@ -106,4 +106,4 @@ def perspective_from_intrinsics(intrinsics):
       [zero, 2.0 * focal_y, 2.0 * principal_y - 1.0, zero],
       [zero, zero, a, b],
       [zero, zero, one, zero]]
-  return torch.stack([tf.stack(row, axis=-1) for row in matrix], axis=-2)
+  return torch.stack([torch.stack(row, axis=-1) for row in matrix], axis=-2)
